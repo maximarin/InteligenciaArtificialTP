@@ -1,193 +1,142 @@
-from simpleai.search import SearchProblem, breadth_first, depth_first, uniform_cost, greedy, astar
-from simpleai.search.viewers import WebViewer, BaseViewer, ConsoleViewer
+from simpleai.search import SearchProblem
+from simpleai.search.traditional import breadth_first, depth_first, limited_depth_first, iterative_limited_depth_first, \
+    uniform_cost, greedy, astar
+from simpleai.search.viewers import WebViewer, ConsoleViewer, BaseViewer
 
-franceses = [(0, 2), (0, 3), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3), (3, 0), (3, 1), (3, 2), (4, 0), (4, 1), (5, 0)]
-piratas = [(4, 4), (4, 5), (5, 4)]
-MovimientosPosibles = ((0,1),(0,2),(0,3),(0,4),(0,5),
-                       (1,0),(1,1),(1,2),(1,3),(1,4),(1,5),
-                       (2,0),(2,1),(2,2),(2,3),(2,4),(2,5),
-                       (3,0),(3,1),(3,2),(3,3),(3,4),(3,5),
-                       (4,0),(4,1),(4,2),(4,3),(4,4),(4,5),
-                       (5,0),(5,1),(5,2),(5,3),(5,4),(5,5))
-mapa = (2, 0)
-llegada = (5, 5)
+posicionMapa=(2,0)
+posicionSalida=(5,5)
 
-Initial =()
+def manhatan(pos1, pos2):
+    return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
 
 
-def resolver (metodo_busqueda,franceses, piratas):
-    franc = tuple(franceses)
-    pirat = tuple(piratas)
-    mapasEncontrados = []
+class entrega1(SearchProblem):
+
+    def actions(self, state):
+        franceses, piratas = state
+        actions = []
+        posicion=0
+
+        for pirata in piratas:
+            x,y = pirata[0]
+
+            # derecha
+            if (y < 5):
+                actions.append([(0, 1),posicion])
+            # izquierda
+            if (y > 0):
+                actions.append([( 0, -1),posicion])
+            # arriba
+            if (x > 0):
+                actions.append([( -1, 0),posicion])
+            # abajo
+            if (x < 5):
+                actions.append([(1,0),posicion])
+
+            posicion=posicion+1
+        return actions
+
+    def result(self, state, action):
+        franceses, piratas = state
+        posicionMover,nroBarco = action
 
 
-    for pirata in range(len(pirat)):
-        mapasEncontrados.append(0)
+        lista_Estado = [list(franceses), list(piratas)]
+        nuevapos = (lista_Estado[1][nroBarco][0][0] + posicionMover[0], lista_Estado[1][nroBarco][0][1] +posicionMover[1])
 
-    indice = 0
-    initial = (franc,pirat,tuple(mapasEncontrados))
-    metodo = str(metodo_busqueda).lower()
+        #Si esta en la misma posicion que el mapa
+        if nuevapos == posicionMapa:
+            lista_Estado[1][nroBarco] = (nuevapos, 1)
+        elif nuevapos in lista_Estado[0]:
+            lista_Estado[0].remove(nuevapos)
+            lista_Estado[1].pop(nroBarco)
+        else:
+             lista_Estado[1][nroBarco] = (nuevapos,piratas[nroBarco][1])
 
-    if metodo == "breadth_first":
-        resultado = breadth_first(Entrega1(initial))
+        franceses =tuple(lista_Estado[0])
+        piratas =tuple(lista_Estado[1])
 
-    if metodo == "depth_first":
-        resultado = depth_first(Entrega1(initial))
-
-    if metodo == "uniform_cost":
-        resultado= uniform_cost(Entrega1(initial))
-
-    if metodo == "greedy":
-        resultado = greedy(Entrega1(initial))
-
-    if metodo == 'astar':
-        resultado = astar(Entrega1(initial), viewer=BaseViewer())
-
-    return resultado
-
-def convertir_lista(listaDetuplas):
-    listaRetornar = [list(elem) for elem in listaDetuplas]
-    return listaRetornar
-
-def convertir_tupla(listaDeListas):
-    listaRetornar = tuple([tuple(elem) for elem in listaDeListas])
-
-    return listaRetornar
-
-class Entrega1(SearchProblem):
+        return (franceses, piratas)
 
     def cost(self, state, action, state2):
         return 1
 
     def is_goal(self, state):
-        franceses,piratas,mapasEncontrados = state
+        franceses, piratas = state
 
-        if 1 in mapasEncontrados:
-            for pirata in piratas:
-                indice = piratas.index(pirata)
-                if mapasEncontrados[indice] == 1 and pirata[1] == 5 and pirata[0] == 5:
-                    return True
+        for p in piratas:
+            if p[0]==posicionSalida and p[1]==1:
+                return True
         return False
 
-    def actions(self, state):
-        franceses, piratas, mapasEncontrados = state
-        acciones = []  #se devolver una lista de la siguiente manera  [(posx,posy),nroBarco]
-
-        #movimientos
-        for pirata in piratas:
-            x,y = pirata
-            nroBarco = piratas.index(pirata)
-
-            #Pregunto si el barco tiene el mapa
-            if mapasEncontrados[nroBarco] != 1:
-                #Si no tiene el mapa puedo moverme por cualquier posicion
-                if (x+1,y) < 5:
-                    acciones.append([(x+1,y),piratas.index(pirata)])
-
-                if (x-1,y) > 0:
-                    acciones.append([(x-1,y),piratas.index(pirata)])
-
-                if (x,y+1) < 5:
-                    acciones.append([(x,y+1),piratas.index(pirata)])
-
-                if(x,y-1) > 0:
-                    acciones.append([(x, y -1), piratas.index(pirata)])
-
-            else:
-                # Si tiene el mapa solo muevo por posiciones donde no hay franceses
-                if (x+1,y) < 5 and (x+1,y) not in franceses:
-                    acciones.append([(x+1,y),piratas.index(pirata)])
-
-                if (x-1,y) > 0 and (x-1,y) not in franceses:
-                    acciones.append([(x-1,y),piratas.index(pirata)])
-
-                if (x,y+1) < 5 and (x,y+1) not in franceses:
-                    acciones.append([(x,y+1),piratas.index(pirata)])
-
-                if (x,y-1) > 0 and (x,y-1) not in franceses:
-                    acciones.append([(x,y-1),piratas.index(pirata)])
-
-        return acciones
-
-
-    def result(self, state, action):
-        franceses, piratas, mapasEncontrados = state
-        pos, nroBarco = action
-        posAccionX,postAccionY= pos
-        #si la pos de la accion lleva al mapa, actualizo la tupla de mapas encontrados
-        if pos == mapa:
-            mapasEncontradosLista = convertir_lista(mapasEncontrados)
-            mapasEncontradosLista[nroBarco] = 1
-            mapasEncontradosTupla = convertir_tupla(mapasEncontradosLista)
-            mapasEncontrados = mapasEncontradosTupla
-
-        #SI hay franceses en la posicion a la cual lleva al accion, elimino el barco frances y el pirata
-        if pos in franceses:
-            francesesLista = convertir_lista(franceses)
-            posicionEliminar = [pos[0],pos[1]]
-            francesesLista.remove(posicionEliminar)
-            francesesTupla = convertir_tupla(francesesLista)
-            franceses = francesesTupla
-
-            piratasLista = convertir_lista(piratas)
-            pirtataAEliminar = piratasLista[nroBarco]
-            piratasLista.remove(pirtataAEliminar)
-            piratasTupla = convertir_tupla(piratasLista)
-            piratas = piratasTupla
-        else:
-            #El barco pirata se mueve a una posición donde no hay franceses.
-            piratasLista = convertir_lista(piratas)
-            piratasLista[nroBarco][0] = posAccionX
-            piratasLista[nroBarco][1] = postAccionY
-            piratasTupla = convertir_tupla(piratasLista)
-            piratas = piratasTupla
-
-        return franceses,piratas,mapasEncontrados
-
-
     def heuristic(self, state):
-        franceses, piratas,mapasEncontrados = state
-        listaCostos = []
-        #Se corrobora cuanto falta para llegar a la meta
+        franceses, piratas =state
+        listaCosto = []
+        menor = 0
 
         for pirata in piratas:
-            indice = piratas.index(pirata)
-            barcoX,barcoY = pirata
-
-            #si ya tiene el mapa se calcula la distancia a (5,5)
-            if mapasEncontrados[indice] == 1:
-                llegadaX,llegadaY = llegada
-                costo = abs(barcoX - llegadaX) + abs(barcoY-llegadaY)
-
+            posicion, mapa = pirata
+            posx,posy = posicion
+            menor = 0
+            if mapa == 1:
+                #Solo se debe tener en cuenta la distancia a llegada(5,5) porque ya tiene el mapa
+                costo = abs(posx - posicionSalida[0]) + abs(posy - posicionSalida[1])
+                if(menor == 0):
+                    menor = costo
+                else:
+                    if(costo < menor):
+                        menor = costo
             else:
-                #si no tiene el mapa se calcula la distancia para llegar al mapa y luego volver a (5,5)
-                mapaX,mapaY = mapa
-                llegadaX, llegadaY = llegada
+                #distancia hasta el mapa + la distancia del mapa a la llegada
+                costo = (abs(posx - posicionMapa[0]) + abs(posy-posicionMapa[1])) + (abs(posicionMapa[0] - posicionSalida[0]) + abs(posicionMapa[1] - posicionSalida[1]))
+                if(menor == 0):
+                    menor = costo
+                else:
+                    if(costo < menor):
+                         menor = costo
 
-                costo = abs(barcoX - mapaX) + abs(barcoY-mapaY) + abs(mapaX - llegadaX) + abs(mapaY - llegadaY)
-
-            listaCostos.append(costo)
-            minimo = min (listaCostos)
-
-        return min(listaCostos)
+        return menor
 
 
+def resolver(metodo_busqueda, franceses, piratas):
+    viewer = BaseViewer()
+    barcos_piratas = []
+
+    for pirata in piratas:
+        barcos_piratas.append((pirata, 0))
+
+    initial = (tuple(franceses), tuple(barcos_piratas))
+
+    problem = entrega1(initial)
+
+    if metodo_busqueda == "breadth_first":
+        resultado = breadth_first(problem, graph_search=True, viewer=viewer)
+    elif metodo_busqueda == "greedy":
+        resultado = greedy(problem, graph_search=True, viewer = viewer)
+    elif metodo_busqueda == "depth_first":
+        resultado = depth_first(problem, graph_search=True, viewer = viewer)
+    elif metodo_busqueda == "astar":
+        resultado = astar(problem, graph_search=True, viewer = viewer)
+    elif metodo_busqueda == "uniform_cost":
+        resultado = uniform_cost(problem, graph_search=True, viewer = viewer)
+
+    return resultado
+
+""""
 if __name__ == '__main__':
 
-    print(' ')
-    visor = BaseViewer()
+    #metodo = "greedy"
+    metodo = "breadth_first"
+    #metodo = "astar"
+    #metodo = "uniform_cost"
+    #metodo = "depth_first"
 
-    result = resolver("astar",franceses,piratas)
+    franceses = [(0,2), (0,3), (1,2), (1,3), (2,1), (2,2), (2,3), (3,0), (3,1), (3,2), (4,0), (4,1), (5,0)]
+    piratas = [(4,4), (4,5), (5,4)]
 
-    print('-----------------<Result Path>-----------------')
-
-    for action, state in result.path():
-        print('Action:', action)
-        print(state)
-
-    print('------------------------------------------------')
-    print('Result State: ', result.state)
-    print(visor.stats)
+    result = resolver(metodo, franceses, piratas)
+   
+"""
 
 
 
