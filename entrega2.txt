@@ -1,0 +1,2 @@
+1:{}
+2:{'Django Girls': ('Laboratorio', 15), 'Introducción a Python': ('Laboratorio', 11), 'Keynote Diversidad': ('Magna', 16), 'Keynote Core Developer': ('Magna', 17), 'APIs Rest': ('42', 10), 'Diseño Sistemas Accesibles': ('Laboratorio', 14), 'Unit Testing': ('Magna', 14), 'Editores de Código': ('Magna', 11), 'Música Python': ('Magna', 10), 'Software, negocios, contabilidad y mucho más': ('Laboratorio', 10), 'Análisis de Imágenes': ('42', 15), 'Satélites Espaciales': ('Magna', 15), 'Lib PyPI': ('42', 11), 'Introducción a Pandas': ('42', 14)}
